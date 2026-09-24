@@ -1,0 +1,32 @@
+name: Build iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
+      - name: Build Scheme 1
+        run: |
+          xcodebuild -project AIWarRoom.xcodeproj -scheme Scheme1 -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" -derivedDataPath build/s1
+          mkdir -p out/Scheme1/Payload
+          cp -R build/s1/Build/Products/Release-iphoneos/Scheme1.app out/Scheme1/Payload/
+          cd out/Scheme1 && zip -qry ../../Scheme1-SameModel-4Persona.ipa Payload
+      - name: Build Scheme 2
+        run: |
+          xcodebuild -project AIWarRoom.xcodeproj -scheme Scheme2 -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" -derivedDataPath build/s2
+          mkdir -p out/Scheme2/Payload
+          cp -R build/s2/Build/Products/Release-iphoneos/Scheme2.app out/Scheme2/Payload/
+          cd out/Scheme2 && zip -qry ../../Scheme2-4Companies-WarRoom.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AI-WarRoom-IPAs
+          path: |
+            Scheme1-SameModel-4Persona.ipa
+            Scheme2-4Companies-WarRoom.ipa
